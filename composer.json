@@ -1,0 +1,32 @@
+{
+    "name": "nikunjkothiya/laravel-load-testing",
+    "description": "High load testing package for Laravel applications with memory and CPU monitoring",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Nikunj Kothiya",
+            "email": "nikunjkothiya401@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "require": {
+        "php": "^8.0",
+        "illuminate/support": "^8.0|^9.0|^10.0",
+        "illuminate/console": "^8.0|^9.0|^10.0",
+        "guzzlehttp/guzzle": "^7.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "NikunjKothiya\\LaravelLoadTesting\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "NikunjKothiya\\LaravelLoadTesting\\LoadTestingServiceProvider"
+            ]
+        }
+    }
+} 
