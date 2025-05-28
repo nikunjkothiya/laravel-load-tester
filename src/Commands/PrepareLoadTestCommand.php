@@ -41,28 +41,28 @@ class PrepareLoadTestCommand extends Command
     public function handle(LoadTestingService $loadTestingService)
     {
         $this->info('Preparing load testing environment...');
-        
+
         // Apply command line options to configuration
         $this->applyCommandOptions();
-        
+
         // Create the results directory if it doesn't exist
         $this->createResultsDirectory();
-        
+
         // Set up the database if requested
         if ($this->option('setup-database')) {
             $this->setupDatabase();
         }
-        
+
         // Create test users if authentication is enabled
         if (config('load-testing.auth.enabled')) {
             $this->createTestUsers();
         }
-        
+
         $this->info('Load testing environment prepared successfully!');
-        
+
         return 0;
     }
-    
+
     /**
      * Apply command line options to the configuration.
      */
@@ -72,50 +72,50 @@ class PrepareLoadTestCommand extends Command
         if ($this->option('users')) {
             config(['load-testing.test.concurrent_users' => (int) $this->option('users')]);
         }
-        
+
         // Set authentication table
         if ($this->option('table')) {
             config(['load-testing.auth.table' => $this->option('table')]);
         }
-        
+
         // Set username field
         if ($this->option('username-field')) {
             config(['load-testing.auth.session.username_field' => $this->option('username-field')]);
             config(['load-testing.auth.token.username_field' => $this->option('username-field')]);
             config(['load-testing.auth.jwt.username_field' => $this->option('username-field')]);
         }
-        
+
         // Set password field
         if ($this->option('password-field')) {
             config(['load-testing.auth.session.password_field' => $this->option('password-field')]);
             config(['load-testing.auth.token.password_field' => $this->option('password-field')]);
             config(['load-testing.auth.jwt.password_field' => $this->option('password-field')]);
         }
-        
+
         // Set authentication method
         if ($this->option('auth-method')) {
             config(['load-testing.auth.method' => $this->option('auth-method')]);
         }
-        
+
         // Enable database monitoring if requested
         if ($this->option('db-monitoring')) {
             config(['load-testing.monitoring.database.enabled' => true]);
         }
-        
+
         // Set database slow query threshold if provided
         if ($this->option('db-slow-threshold')) {
             config(['load-testing.monitoring.database.slow_threshold' => (int) $this->option('db-slow-threshold')]);
         }
     }
-    
+
     /**
      * Create the results directory.
      */
     protected function createResultsDirectory()
     {
-        $outputDir = config('load-testing.reporting.output_dir');
+        $outputDir = config('load-testing.reporting.output_path');
         $outputPath = storage_path($outputDir);
-        
+
         if (!File::exists($outputPath)) {
             File::makeDirectory($outputPath, 0755, true);
             $this->info("Created results directory: {$outputPath}");
@@ -123,14 +123,14 @@ class PrepareLoadTestCommand extends Command
             $this->info("Results directory already exists: {$outputPath}");
         }
     }
-    
+
     /**
      * Set up the database for storing test results.
      */
     protected function setupDatabase()
     {
         $tableName = config('load-testing.monitoring.results_table');
-        
+
         if (Schema::hasTable($tableName)) {
             if ($this->confirm("The table '{$tableName}' already exists. Do you want to drop it and recreate?")) {
                 Schema::drop($tableName);
@@ -140,7 +140,7 @@ class PrepareLoadTestCommand extends Command
                 return;
             }
         }
-        
+
         // Create the results table
         Schema::create($tableName, function ($table) {
             $table->id();
@@ -163,10 +163,10 @@ class PrepareLoadTestCommand extends Command
             $table->json('routes_performance')->nullable();
             $table->timestamps();
         });
-        
+
         $this->info("Created database table: {$tableName}");
     }
-    
+
     /**
      * Create test users for authentication testing.
      */
@@ -177,24 +177,24 @@ class PrepareLoadTestCommand extends Command
         $usernameField = config('load-testing.auth.session.username_field');
         $passwordField = config('load-testing.auth.session.password_field');
         $passwordHash = config('load-testing.auth.credentials.password_hash');
-        
+
         // Check if table exists
         if (!Schema::hasTable($table)) {
             $this->error("The table '{$table}' does not exist. Cannot create test users.");
             return;
         }
-        
+
         // Check if the required fields exist
         if (!Schema::hasColumn($table, $usernameField) || !Schema::hasColumn($table, $passwordField)) {
             $this->error("The table '{$table}' does not have the required fields ({$usernameField}, {$passwordField}).");
             return;
         }
-        
+
         // Check if test users already exist
         $existingUsers = DB::table($table)
             ->where($usernameField, 'like', 'loadtest_%')
             ->count();
-        
+
         if ($existingUsers > 0) {
             if ($this->confirm("Found {$existingUsers} existing test users. Do you want to remove them and create new ones?")) {
                 // Delete existing test users
@@ -205,7 +205,7 @@ class PrepareLoadTestCommand extends Command
                 $existingUsers = 0;
             } else {
                 $this->info("Using existing test users.");
-                
+
                 if ($existingUsers >= $concurrentUsers) {
                     $this->info("You have enough test users ({$existingUsers}) for your concurrent users setting ({$concurrentUsers}).");
                     return;
@@ -214,12 +214,12 @@ class PrepareLoadTestCommand extends Command
                 }
             }
         }
-        
+
         // Create test users
         $usersToCreate = $concurrentUsers - $existingUsers;
         $progressBar = $this->output->createProgressBar($usersToCreate);
         $progressBar->start();
-        
+
         for ($i = 0; $i < $usersToCreate; $i++) {
             $userData = [
                 $usernameField => 'loadtest_' . uniqid(),
@@ -228,13 +228,13 @@ class PrepareLoadTestCommand extends Command
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
-            
+
             DB::table($table)->insert($userData);
             $progressBar->advance();
         }
-        
+
         $progressBar->finish();
         $this->newLine();
         $this->info("Created {$usersToCreate} test users.");
     }
-} 
+}

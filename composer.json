@@ -15,7 +15,21 @@
         "php": "^8.0",
         "illuminate/support": "^8.0|^9.0|^10.0",
         "illuminate/console": "^8.0|^9.0|^10.0",
-        "guzzlehttp/guzzle": "^7.0"
+        "illuminate/http": "^8.0|^9.0|^10.0",
+        "illuminate/database": "^8.0|^9.0|^10.0",
+        "illuminate/view": "^8.0|^9.0|^10.0",
+        "guzzlehttp/guzzle": "^7.0",
+        "react/event-loop": "^1.2",
+        "react/http": "^1.9",
+        "react/socket": "^1.15",
+        "cboden/ratchet": "^0.4.4",
+        "ratchet/pawl": "^0.4"
+    },
+    "suggest": {
+        "laravel/sanctum": "For API token authentication during load testing",
+        "laravel/passport": "For OAuth2 authentication during load testing",
+        "tymon/jwt-auth": "For JWT authentication during load testing",
+        "predis/predis": "For Redis-based metrics storage and real-time updates"
     },
     "autoload": {
         "psr-4": {
@@ -29,4 +43,4 @@
             ]
         }
     }
-} 
+}
